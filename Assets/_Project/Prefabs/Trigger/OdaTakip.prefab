@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &623761919231616935
+--- !u!1 &8377044040234915988
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4834126892459456725}
-  - component: {fileID: 2933226260503046480}
-  - component: {fileID: 5071197641876482218}
+  - component: {fileID: 2861325422645079536}
+  - component: {fileID: 2763024133286072936}
+  - component: {fileID: 7972050204502588197}
   m_Layer: 0
   m_Name: Cube
   m_TagString: Untagged
@@ -18,36 +18,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4834126892459456725
+--- !u!4 &2861325422645079536
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 623761919231616935}
+  m_GameObject: {fileID: 8377044040234915988}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 569419922052602109}
+  m_Father: {fileID: 8824415302342481411}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &2933226260503046480
+--- !u!33 &2763024133286072936
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 623761919231616935}
+  m_GameObject: {fileID: 8377044040234915988}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!23 &5071197641876482218
+--- !u!23 &7972050204502588197
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 623761919231616935}
+  m_GameObject: {fileID: 8377044040234915988}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -90,7 +90,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &1927489274941844344
+--- !u!1 &8664954372369288182
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -98,39 +98,52 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 569419922052602109}
-  - component: {fileID: 5607885870996340404}
-  - component: {fileID: -4855707257274700500}
+  - component: {fileID: 8824415302342481411}
+  - component: {fileID: 6356910355691884984}
+  - component: {fileID: 8934939864806692429}
   m_Layer: 0
-  m_Name: Trigger
+  m_Name: OdaTakip
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &569419922052602109
+--- !u!4 &8824415302342481411
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1927489274941844344}
+  m_GameObject: {fileID: 8664954372369288182}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 4.769615, y: 1, z: 3.818}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 4834126892459456725}
+  - {fileID: 2861325422645079536}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &5607885870996340404
+--- !u!114 &6356910355691884984
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8664954372369288182}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 663b44ab8f327de4598f4dfc6abb2ff0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OdaTakip
+  oyuncuTagi: Player
+--- !u!65 &8934939864806692429
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1927489274941844344}
+  m_GameObject: {fileID: 8664954372369288182}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -145,41 +158,3 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &-4855707257274700500
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1927489274941844344}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 66aab881a37bdaa45af2be42467f0841, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::NarrationTrigger
-  sesDosyasi: {fileID: 0}
-  sesinCikacagiYer: {fileID: 0}
-  sesSeviyesi: 1
-  sadeceBirKereCalsin: 1
-  sadeceOyuncuTetiklesin: 1
-  oyuncuTagi: Player
-  yonluSes: 0
-  maksimumMesafe: 20
-  altyaziGoster: 1
-  altyaziIngilizce: 
-  altyaziBasitlestirilmisCince: 
-  altyaziJaponca: 
-  altyaziKorece: 
-  altyaziAlmanca: 
-  altyaziFransizca: 
-  altyaziIspanyolca: 
-  altyaziBrezilyaPortekizcesi: 
-  altyaziRusca: 
-  altyaziItalyanca: 
-  altyaziTurkce: 
-  altyaziArapca: 
-  altyaziTextUI: {fileID: 0}
-  acilacakKapi1: {fileID: 0}
-  acilacakKapi2: {fileID: 0}
-  kapatilipKilitlenecekKapi1: {fileID: 0}
-  kapatilipKilitlenecekKapi2: {fileID: 0}

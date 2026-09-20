@@ -59,6 +59,20 @@ public class OyuncuHareketi : MonoBehaviour
 
     private void Update()
     {
+        // Escape ile cursor'ı serbest bırak
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
+        // Oyun alanına tıklayınca cursor'ı tekrar kilitle
+        if (Input.GetMouseButtonDown(0) && Cursor.lockState != CursorLockMode.Locked)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+            return; // Bu frame'de tıklama sadece kilitlesin, aynı anda etkileşim tetiklemesin
+        }
         // Oyun içinde Esc ile imleci serbest bırak/kilitle (test için kullanışlı)
         if (Input.GetKeyDown(KeyCode.Escape))
         {
@@ -147,9 +161,19 @@ public class OyuncuHareketi : MonoBehaviour
 
         if (Physics.Raycast(isin, out carpanObje, etkilesimMesafesi, etkilesimYuzeyi))
         {
-            if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.E))
+            if (Input.GetKeyDown(KeyCode.E))
             {
                 Debug.Log("Etkileşime geçilen nesne: " + carpanObje.transform.name);
+
+                Kapi kapi = carpanObje.collider.GetComponentInParent<Kapi>();
+                if (kapi != null)
+                {
+                    // Kapı durumuna göre aç/kapa: açıksa kapat, kapalıysa aç
+                    if (kapi.durum == Kapi.KapiDurumu.Acik)
+                        kapi.Kapa();
+                    else
+                        kapi.Ac();
+                }
             }
         }
     }

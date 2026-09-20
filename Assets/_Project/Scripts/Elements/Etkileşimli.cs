@@ -1,9 +1,10 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro; // TextMeshPro kullanıyorsan bu satırı aktif bırak
+using System.Collections;
 
 [RequireComponent(typeof(Collider))]
-public class NarrationTrigger : MonoBehaviour, IAnlatimDurdurulabilir
+public class Etkileşimli : MonoBehaviour, IAnlatimDurdurulabilir
 {
     [Header("Ses Ayarları")]
     public AudioClip sesDosyasi;
@@ -51,16 +52,32 @@ public class NarrationTrigger : MonoBehaviour, IAnlatimDurdurulabilir
     public string altyaziArapca = "";
 
     public TextMeshProUGUI altyaziTextUI;
-    // altyaziSuresi kaldırıldı, artık ses dosyasının uzunluğu kullanılıyor
 
-    [Header("Kapı Kontrolü (opsiyonel — boş bırakılabilir)")]
-    public Kapi acilacakKapi1;
-    public Kapi acilacakKapi2;
-    public Kapi kapatilipKilitlenecekKapi1;
-    public Kapi kapatilipKilitlenecekKapi2;
+    [Header("Yükselen Obje Ayarları")]
+    public bool objeYukselsin = false;
+    public Transform yukselecekObje;              // Yukarı kaldırılacak obje (platform, sütun, vs.)
+    public float yukselmeHizi = 1f;                // Birim/saniye
+    public float yukselmeMesafesi = 3f;            // Ne kadar yukarı çıkacak (yerel Y ekseninde)
+    public AudioClip yukselmeSesi;                 // Yükselirken çalacak animasyon/motor sesi
+    [Range(0f, 1f)]
+    public float yukselmeSesSeviyesi = 1f;
+    public bool yukselmeSesiDongude = true;        // Ses, yükselme süresince loop çalsın mı
+
+    [Header("Kapı Ayarları")]
+    public bool kapiAcilsin = false;
+    public Transform kapi;                         // Açılacak kapı objesi (pivot doğru yerde olmalı)
+    public float kapiAcilmaAcisi = 90f;             // Kaç derece açılacak (yerel Y ekseni etrafında)
+    public float kapiAcilmaHizi = 60f;              // Derece/saniye
+    public AudioClip kapiAcilmaSesi;                // Kapı açılırken çalacak ses
+    [Range(0f, 1f)]
+    public float kapiAcilmaSesSeviyesi = 1f;
+    public Transform kapiSesininCikacagiYer;        // Boş bırakılırsa kapı objesinin kendisinden çalar
 
     private bool calindiMi = false;
     private AudioSource sesKaynagi;
+    private AudioSource yukselmeSesKaynagi;
+    private AudioSource kapiSesKaynagi;
+    private bool hareketBasladiMi = false;
 
     private void Awake()
     {
@@ -69,7 +86,6 @@ public class NarrationTrigger : MonoBehaviour, IAnlatimDurdurulabilir
             GameObject player = GameObject.FindGameObjectWithTag("Player");
             if (player != null)
             {
-                // örnek: player'ın "AgizNoktasi" isimli child'ını bul
                 Transform hedef = player.transform.Find("Anlatıcı");
                 sesinCikacagiYer = hedef != null ? hedef : player.transform;
             }
@@ -79,7 +95,6 @@ public class NarrationTrigger : MonoBehaviour, IAnlatimDurdurulabilir
             }
         }
 
-
         if (sesinCikacagiYer == null)
             sesinCikacagiYer = transform;
 
@@ -88,6 +103,28 @@ public class NarrationTrigger : MonoBehaviour, IAnlatimDurdurulabilir
         sesKaynagi.spatialBlend = yonluSes ? 1f : 0f;
         sesKaynagi.maxDistance = maksimumMesafe;
         sesKaynagi.volume = sesSeviyesi;
+
+        // Yükselen obje için ayrı bir ses kaynağı (objenin üzerinde, onunla birlikte hareket eder)
+        if (objeYukselsin && yukselecekObje != null)
+        {
+            yukselmeSesKaynagi = yukselecekObje.gameObject.AddComponent<AudioSource>();
+            yukselmeSesKaynagi.playOnAwake = false;
+            yukselmeSesKaynagi.spatialBlend = yonluSes ? 1f : 0f;
+            yukselmeSesKaynagi.maxDistance = maksimumMesafe;
+            yukselmeSesKaynagi.loop = yukselmeSesiDongude;
+            yukselmeSesKaynagi.volume = yukselmeSesSeviyesi;
+        }
+
+        // Kapı açılma sesi için ayrı bir ses kaynağı (sesin çıkacağı yer seçilebilir)
+        if (kapiAcilsin && kapi != null)
+        {
+            Transform kapiSesYeri = kapiSesininCikacagiYer != null ? kapiSesininCikacagiYer : kapi;
+            kapiSesKaynagi = kapiSesYeri.gameObject.AddComponent<AudioSource>();
+            kapiSesKaynagi.playOnAwake = false;
+            kapiSesKaynagi.spatialBlend = yonluSes ? 1f : 0f;
+            kapiSesKaynagi.maxDistance = maksimumMesafe;
+            kapiSesKaynagi.volume = kapiAcilmaSesSeviyesi;
+        }
     }
 
     private void OnTriggerEnter(Collider other)
@@ -106,13 +143,13 @@ public class NarrationTrigger : MonoBehaviour, IAnlatimDurdurulabilir
         // Aynı anda tek anlatım olsun: başka bir trigger o sırada anlatıyorsa onu durdur.
         AnlatimYoneticisi.Basla(this);
 
-        if (sesDosyasi != null)
+        if (sesDosyasi == null)
         {
-            sesKaynagi.PlayOneShot(sesDosyasi, sesSeviyesi);
+            Debug.LogWarning($"{gameObject.name}: Ses dosyası atanmamış!");
         }
         else
         {
-            Debug.LogWarning($"{gameObject.name}: Ses dosyası atanmamış!");
+            sesKaynagi.PlayOneShot(sesDosyasi, sesSeviyesi);
         }
 
         calindiMi = true;
@@ -120,7 +157,17 @@ public class NarrationTrigger : MonoBehaviour, IAnlatimDurdurulabilir
         if (altyaziGoster)
             AltyaziGoster();
 
-        KapilariKontrolEt();
+        // Yükselen obje ve kapı açma işlemini aynı anda başlat
+        if (objeYukselsin && yukselecekObje != null && !hareketBasladiMi)
+        {
+            hareketBasladiMi = true;
+            StartCoroutine(ObjeyiYukselt());
+        }
+
+        if (kapiAcilsin && kapi != null)
+        {
+            StartCoroutine(KapiyiAc());
+        }
     }
 
     /// <summary>Başka bir trigger devreye girdiğinde bu trigger'ın anlatımını (ses+altyazı) keser.</summary>
@@ -133,22 +180,54 @@ public class NarrationTrigger : MonoBehaviour, IAnlatimDurdurulabilir
         AltyaziGizle();
     }
 
-    private void KapilariKontrolEt()
+    private IEnumerator ObjeyiYukselt()
     {
-        // Her alan opsiyonel — atanmamışsa (null) sessizce atlanır, trigger yine çalışır.
-        if (acilacakKapi1 != null) acilacakKapi1.Ac();
-        if (acilacakKapi2 != null) acilacakKapi2.Ac();
+        Vector3 baslangicPozisyonu = yukselecekObje.localPosition;
+        Vector3 hedefPozisyon = baslangicPozisyonu + Vector3.up * yukselmeMesafesi;
 
-        if (kapatilipKilitlenecekKapi1 != null)
+        if (yukselmeSesi != null && yukselmeSesKaynagi != null)
         {
-            kapatilipKilitlenecekKapi1.Kapa();
-            kapatilipKilitlenecekKapi1.Kilitle();
+            yukselmeSesKaynagi.clip = yukselmeSesi;
+            yukselmeSesKaynagi.Play();
         }
-        if (kapatilipKilitlenecekKapi2 != null)
+
+        while (Vector3.Distance(yukselecekObje.localPosition, hedefPozisyon) > 0.01f)
         {
-            kapatilipKilitlenecekKapi2.Kapa();
-            kapatilipKilitlenecekKapi2.Kilitle();
+            yukselecekObje.localPosition = Vector3.MoveTowards(
+                yukselecekObje.localPosition,
+                hedefPozisyon,
+                yukselmeHizi * Time.deltaTime
+            );
+            yield return null;
         }
+
+        yukselecekObje.localPosition = hedefPozisyon;
+
+        if (yukselmeSesKaynagi != null && yukselmeSesKaynagi.isPlaying)
+            yukselmeSesKaynagi.Stop();
+    }
+
+    private IEnumerator KapiyiAc()
+    {
+        if (kapiAcilmaSesi != null && kapiSesKaynagi != null)
+        {
+            kapiSesKaynagi.PlayOneShot(kapiAcilmaSesi, kapiAcilmaSesSeviyesi);
+        }
+
+        Quaternion baslangicRotasyonu = kapi.localRotation;
+        Quaternion hedefRotasyon = baslangicRotasyonu * Quaternion.Euler(0f, kapiAcilmaAcisi, 0f);
+
+        while (Quaternion.Angle(kapi.localRotation, hedefRotasyon) > 0.5f)
+        {
+            kapi.localRotation = Quaternion.RotateTowards(
+                kapi.localRotation,
+                hedefRotasyon,
+                kapiAcilmaHizi * Time.deltaTime
+            );
+            yield return null;
+        }
+
+        kapi.localRotation = hedefRotasyon;
     }
 
     private void AltyaziGoster()
@@ -167,7 +246,6 @@ public class NarrationTrigger : MonoBehaviour, IAnlatimDurdurulabilir
         altyaziTextUI.text = metin;
         altyaziTextUI.gameObject.SetActive(true);
 
-        // Altyazı süresi artık ses dosyasının uzunluğuna eşit
         float sure = sesDosyasi != null ? sesDosyasi.length : 4f;
 
         CancelInvoke(nameof(AltyaziGizle));
