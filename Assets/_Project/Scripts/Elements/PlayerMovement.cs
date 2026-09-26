@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
-public class OyuncuHareketi : MonoBehaviour
+public class PlayerMovement : MonoBehaviour // Sınıf adı dosya adıyla aynı olmalı
 {
     [Header("Kamera Ayarları")]
     [Tooltip("Main Camera DEĞİL! Player'ın altındaki boş 'KameraPivotu' objesini buraya sürükle.")]
@@ -59,13 +59,6 @@ public class OyuncuHareketi : MonoBehaviour
 
     private void Update()
     {
-        // Escape ile cursor'ı serbest bırak
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
-
         // Oyun alanına tıklayınca cursor'ı tekrar kilitle
         if (Input.GetMouseButtonDown(0) && Cursor.lockState != CursorLockMode.Locked)
         {
@@ -173,6 +166,13 @@ public class OyuncuHareketi : MonoBehaviour
                         kapi.Kapa();
                     else
                         kapi.Ac();
+                }
+
+                // Etkileşimli objeye bakıp E'ye basınca anlatımı/olayı başlat
+                Etkileşimli etkilesimli = carpanObje.collider.GetComponentInParent<Etkileşimli>();
+                if (etkilesimli != null)
+                {
+                    etkilesimli.Etkiles();
                 }
             }
         }

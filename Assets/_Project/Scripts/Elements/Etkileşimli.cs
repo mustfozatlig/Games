@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
 using TMPro; // TextMeshPro kullanıyorsan bu satırı aktif bırak
 using System.Collections;
 
@@ -54,6 +55,11 @@ public class Etkileşimli : MonoBehaviour, IAnlatimDurdurulabilir
     public TextMeshProUGUI altyaziTextUI;
     [Tooltip("Opsiyonel: metnin içinde bulunduğu arka plan panel objesi (Content Size Fitter'lı). Atanırsa metinle birlikte açılıp kapanır; boş bırakılırsa sadece metin objesi açılıp kapanır.")]
     public GameObject altyaziPanel;
+    [Tooltip("Altyazının en fazla genişliği. Metin bundan uzunsa alt satıra geçer; panel metnin boyutuna göre büyür/küçülür.")]
+    public float altyaziMaksGenislik = 900f;
+    [Tooltip("Ekranda aynı anda en fazla kaç satır altyazı görünsün. Metin daha uzunsa parça parça, sırayla gösterilir.")]
+    public int altyaziMaksSatir = 2;
+    private Coroutine _altyaziAkisi;
 
     [Header("Yükselen Obje Ayarları")]
     public bool objeYukselsin = false;
@@ -104,7 +110,7 @@ public class Etkileşimli : MonoBehaviour, IAnlatimDurdurulabilir
         sesKaynagi.playOnAwake = false;
         sesKaynagi.spatialBlend = yonluSes ? 1f : 0f;
         sesKaynagi.maxDistance = maksimumMesafe;
-        sesKaynagi.volume = sesSeviyesi;
+        sesKaynagi.volume = 1f; // Seviye PlayOneShot'ta veriliyor; burada da verilirse iki kez çarpılır
 
         // Yükselen obje için ayrı bir ses kaynağı (objenin üzerinde, onunla birlikte hareket eder)
         if (objeYukselsin && yukselecekObje != null)
@@ -125,8 +131,26 @@ public class Etkileşimli : MonoBehaviour, IAnlatimDurdurulabilir
             kapiSesKaynagi.playOnAwake = false;
             kapiSesKaynagi.spatialBlend = yonluSes ? 1f : 0f;
             kapiSesKaynagi.maxDistance = maksimumMesafe;
-            kapiSesKaynagi.volume = kapiAcilmaSesSeviyesi;
+            kapiSesKaynagi.volume = 1f; // Seviye PlayOneShot'ta veriliyor
         }
+    }
+
+    private void Start()
+    {
+        // Panel atanmamışsa: metnin hemen üstündeki arka plan (Image) objesini panel olarak kullan.
+        // (Canvas'ın kendisini asla kapatmayız.)
+        if (altyaziPanel == null && altyaziTextUI != null)
+        {
+            Transform ust = altyaziTextUI.transform.parent;
+            if (ust != null && ust.GetComponent<Image>() != null && ust.GetComponent<Canvas>() == null)
+                altyaziPanel = ust.gameObject;
+        }
+
+        // Oyun başlarken altyazı ve arka planı gizli olsun; sadece anlatım sırasında görünsün.
+        if (altyaziTextUI != null)
+            altyaziTextUI.gameObject.SetActive(false);
+        if (altyaziPanel != null)
+            altyaziPanel.SetActive(false);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -134,6 +158,15 @@ public class Etkileşimli : MonoBehaviour, IAnlatimDurdurulabilir
         if (sadeceOyuncuTetiklesin && !other.CompareTag(oyuncuTagi))
             return;
 
+        if (sadeceBirKereCalsin && calindiMi)
+            return;
+
+        SesiCal();
+    }
+
+    /// <summary>Oyuncu bu objeye bakıp E'ye bastığında PlayerMovement tarafından çağrılır.</summary>
+    public void Etkiles()
+    {
         if (sadeceBirKereCalsin && calindiMi)
             return;
 
@@ -175,10 +208,11 @@ public class Etkileşimli : MonoBehaviour, IAnlatimDurdurulabilir
     /// <summary>Başka bir trigger devreye girdiğinde bu trigger'ın anlatımını (ses+altyazı) keser.</summary>
     public void AnlatimiDurdur()
     {
-        if (sesKaynagi != null && sesKaynagi.isPlaying)
+        // PlayOneShot ile çalan seslerde isPlaying güvenilir değil — doğrudan durdur
+        if (sesKaynagi != null)
             sesKaynagi.Stop();
 
-        CancelInvoke(nameof(AltyaziGizle));
+        if (_altyaziAkisi != null) { StopCoroutine(_altyaziAkisi); _altyaziAkisi = null; }
         AltyaziGizle();
     }
 
@@ -245,19 +279,33 @@ public class Etkileşimli : MonoBehaviour, IAnlatimDurdurulabilir
         if (string.IsNullOrEmpty(metin))
             return;
 
-        altyaziTextUI.text = metin;
         altyaziTextUI.gameObject.SetActive(true);
         if (altyaziPanel != null) altyaziPanel.SetActive(true);
 
-        // Content Size Fitter bazen aynı karede yeniden hesaplamıyor — zorla tetikle.
-        RectTransform panelRect = altyaziPanel != null ? altyaziPanel.GetComponent<RectTransform>() : altyaziTextUI.rectTransform.parent as RectTransform;
-        if (panelRect != null)
-            LayoutRebuilder.ForceRebuildLayoutImmediate(panelRect);
+        // Uzun metni ekrana sığan parçalara böl (her parça en fazla altyaziMaksSatir satır)
+        List<string> parcalar = AltyaziYardimcisi.Parcala(altyaziTextUI, metin, altyaziMaksGenislik, altyaziMaksSatir);
 
+        // Toplam süre ses dosyasının uzunluğu; parçalar arasında metin uzunluğuna göre paylaştırılır
         float sure = sesDosyasi != null ? sesDosyasi.length : 4f;
 
-        CancelInvoke(nameof(AltyaziGizle));
-        Invoke(nameof(AltyaziGizle), sure);
+        if (_altyaziAkisi != null) StopCoroutine(_altyaziAkisi);
+        _altyaziAkisi = StartCoroutine(AltyaziAkisi(parcalar, sure));
+    }
+
+    private IEnumerator AltyaziAkisi(List<string> parcalar, float toplamSure)
+    {
+        int toplamKarakter = 0;
+        foreach (string p in parcalar) toplamKarakter += p.Length;
+        if (toplamKarakter == 0) toplamKarakter = 1;
+
+        foreach (string parca in parcalar)
+        {
+            AltyaziYardimcisi.Goster(altyaziTextUI, altyaziPanel, parca, altyaziMaksGenislik);
+            yield return new WaitForSeconds(toplamSure * parca.Length / toplamKarakter);
+        }
+
+        _altyaziAkisi = null;
+        AltyaziGizle();
     }
 
     private void AltyaziGizle()

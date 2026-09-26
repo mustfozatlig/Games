@@ -10,7 +10,7 @@ using UnityEngine;
 /// 2) İngilizce/Türkçe/Almanca butonlarının OnClick() listesine bu objeyi sürükle,
 ///    fonksiyon olarak IngilizceSec() / TurkceSec() / AlmancaSec() seç.
 /// </summary>
-public class DilSecimiUI : MonoBehaviour
+public class Dilsecimiui : MonoBehaviour // Sınıf adı dosya adıyla aynı olmalı
 {
     public void IngilizceSec() => DilYoneticisi.DilAyarla(DilYoneticisi.Dil.Ingilizce);
     public void BasitlestirilmisCinceSec() => DilYoneticisi.DilAyarla(DilYoneticisi.Dil.BasitlestirilmisCince);
