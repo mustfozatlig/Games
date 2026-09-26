@@ -52,6 +52,8 @@ public class Etkileşimli : MonoBehaviour, IAnlatimDurdurulabilir
     public string altyaziArapca = "";
 
     public TextMeshProUGUI altyaziTextUI;
+    [Tooltip("Opsiyonel: metnin içinde bulunduğu arka plan panel objesi (Content Size Fitter'lı). Atanırsa metinle birlikte açılıp kapanır; boş bırakılırsa sadece metin objesi açılıp kapanır.")]
+    public GameObject altyaziPanel;
 
     [Header("Yükselen Obje Ayarları")]
     public bool objeYukselsin = false;
@@ -245,6 +247,12 @@ public class Etkileşimli : MonoBehaviour, IAnlatimDurdurulabilir
 
         altyaziTextUI.text = metin;
         altyaziTextUI.gameObject.SetActive(true);
+        if (altyaziPanel != null) altyaziPanel.SetActive(true);
+
+        // Content Size Fitter bazen aynı karede yeniden hesaplamıyor — zorla tetikle.
+        RectTransform panelRect = altyaziPanel != null ? altyaziPanel.GetComponent<RectTransform>() : altyaziTextUI.rectTransform.parent as RectTransform;
+        if (panelRect != null)
+            LayoutRebuilder.ForceRebuildLayoutImmediate(panelRect);
 
         float sure = sesDosyasi != null ? sesDosyasi.length : 4f;
 
@@ -256,6 +264,8 @@ public class Etkileşimli : MonoBehaviour, IAnlatimDurdurulabilir
     {
         if (altyaziTextUI != null)
             altyaziTextUI.gameObject.SetActive(false);
+        if (altyaziPanel != null)
+            altyaziPanel.SetActive(false);
 
         AnlatimYoneticisi.Bitti(this);
     }

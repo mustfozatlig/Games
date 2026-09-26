@@ -25,15 +25,22 @@ public class DilSecimiUI : MonoBehaviour
     public void TurkceSec() => DilYoneticisi.DilAyarla(DilYoneticisi.Dil.Turkce);
     public void ArapcaSec() => DilYoneticisi.DilAyarla(DilYoneticisi.Dil.Arapca);
 
-    // Şu an için test: Inspector'dan enum seçip anında dili değiştirmek istersen
-    // bu alanı doldurup sağ tık > "Şimdi Uygula" yerine, Play modundayken
-    // context menu ile tetikleyebilirsin (ContextMenu attribute sayesinde).
-    [Header("Test (Play modunda Inspector'dan sağ tık > Uygula)")]
+    // Test: Play modundayken bu dropdown'dan bir dil seçmen yeterli, otomatik uygulanır.
+    [Header("Test (Play modunda dropdown'dan seç, otomatik uygulanır)")]
     public DilYoneticisi.Dil testDili = DilYoneticisi.Dil.Turkce;
 
     [ContextMenu("Test Dilini Uygula")]
     private void TestDiliniUygula()
     {
         DilYoneticisi.DilAyarla(testDili);
+    }
+
+    // Inspector'da testDili değiştirildiği anda (Play modundayken) otomatik tetiklenir.
+    private void OnValidate()
+    {
+        if (Application.isPlaying)
+        {
+            DilYoneticisi.DilAyarla(testDili);
+        }
     }
 }
